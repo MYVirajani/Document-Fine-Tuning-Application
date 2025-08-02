@@ -1,37 +1,36 @@
-# backend/api/users.py
-
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
-from ..db import crud, models
-from sqlalchemy.orm import Session
+from ..db import crud
 from ..db.database import get_db
+from sqlalchemy.orm import Session
 
 router = APIRouter(prefix="/users", tags=["Users"])
 
 class UserCreate(BaseModel):
-    name: str
-    email: str
+    username: str
+    password: str
 
-class UserOut(BaseModel):
-    id: int
-    name: str
-    email: str
+class UserLogin(BaseModel):
+    username: str
+    password: str
 
-@router.post("/register", response_model=UserOut)
-def register_user(user: UserCreate, db: Session = Depends(get_db)):
-    db_user = crud.create_user(db, user.name, user.email)
-    return db_user
+class ModuleCreate(BaseModel):
+    module_code: str
 
-@router.get("/{user_id}/models")
-def list_user_models(user_id: int):
-    base_path = f"models/user_{user_id}"
-    if not os.path.exists(base_path):
-        return {"models": []}
-    moduleCodes = os.listdir(base_path)
-    return {"models": moduleCodes}
+@router.post("/register")
+def register(user: UserCreate, db: Session = Depends(get_db)):
+    db_user = crud.get_user_by_username(db, user.username)
+    if db_user:
+        raise HTTPException(status_code=400, detail="Username already exists")
+    return crud.create_user(db, user.username, user.password)
 
-@router.post("/module/create", response_model=schemas.DomainModel)
-def create_module_for_user(module: schemas.ModuleCreate, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    return crud.create_user_module(db=db, user_id=current_user.id, module_code=module.module_code)
+@router.post("/login")
+def login(user: UserLogin, db: Session = Depends(get_db)):
+    db_user = crud.get_user_by_username(db, user.username)
+    if not db_user or not crud.verify_user_password(db_user, user.password):
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+    return {"id": db_user.id, "username": db_user.username}
 
-
+@router.post("/{user_id}/module")
+def create_module(user_id: int, module: ModuleCreate, db: Session = Depends(get_db)):
+    return crud.create_model_record(db, user_id=user_id, moduleCode=module.module_code)

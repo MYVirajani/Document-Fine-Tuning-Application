@@ -1,12 +1,9 @@
-# backend/db/models.py
-
 from sqlalchemy import Column, Integer, String, ForeignKey
 from sqlalchemy.orm import relationship
 from .database import Base
 
 class User(Base):
     __tablename__ = "users"
-
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String, unique=True, index=True)
     password = Column(String)
@@ -15,7 +12,6 @@ class User(Base):
 
 class FineTunedModel(Base):
     __tablename__ = "models"
-
     id = Column(Integer, primary_key=True, index=True)
     moduleCode = Column(String, index=True)
     path = Column(String)

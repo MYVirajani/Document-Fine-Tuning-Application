@@ -1,5 +1,3 @@
-# backend/db/crud.py
-
 from sqlalchemy.orm import Session
 from . import models
 from passlib.context import CryptContext
@@ -20,7 +18,7 @@ def create_user(db: Session, username: str, password: str):
 def verify_user_password(db_user: models.User, password: str):
     return pwd_context.verify(password, db_user.password)
 
-def create_model_record(db: Session, user_id: int, moduleCode: str, model_path: str):
+def create_model_record(db: Session, user_id: int, moduleCode: str, model_path: str = ""):
     model = models.FineTunedModel(
         moduleCode=moduleCode, path=model_path, user_id=user_id
     )
